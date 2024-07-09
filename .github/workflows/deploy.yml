@@ -1,8 +1,12 @@
 name: Deploy LSHworkspace-Maintenace site to Pages
 
 on:
-  push:
-    branches: ["main"]
+#  push:
+#    branches: ["main"]
+
+#  workflow_run:
+#    workflows:
+#      - ""
 
   workflow_dispatch:
 

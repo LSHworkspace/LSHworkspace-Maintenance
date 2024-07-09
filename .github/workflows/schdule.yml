@@ -1,0 +1,8 @@
+#name: Maintenance Schedule
+#
+#on:
+#  schedule:
+#    - cron: '0 * * * *'
+#
+#jobs:
+#

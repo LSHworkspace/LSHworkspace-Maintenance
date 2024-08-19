@@ -50,7 +50,7 @@ jobs:
           # PUBLIC_URL=$(echo $GITHUB_REPOSITORY | sed -r 's/^.+\/(.+)$/\/\1\//')
           # echo VITE_BASE_URL=$PUBLIC_URL > .env
 
-          echo VITE_BASE_URL=${{ steps.deployment.outputs.page_url }} > .env
+          echo VITE_BASE_URL=maintenancepage.lshworkspace.com > .env
 
 
       - name: Build with Vite

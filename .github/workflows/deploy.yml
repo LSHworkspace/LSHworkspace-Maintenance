@@ -47,10 +47,10 @@ jobs:
 
       - name: Set PUBLIC_URL
         run: |
-#          PUBLIC_URL=$(echo $GITHUB_REPOSITORY | sed -r 's/^.+\/(.+)$/\/\1\//')
-#          echo VITE_BASE_URL=$PUBLIC_URL > .env
+          # PUBLIC_URL=$(echo $GITHUB_REPOSITORY | sed -r 's/^.+\/(.+)$/\/\1\//')
+          # echo VITE_BASE_URL=$PUBLIC_URL > .env
 
-          echo VITE_BASE_URL="maintenance.lshworkspace.com" > .env
+          echo VITE_BASE_URL=${{ steps.deployment.outputs.page_url }} > .env
 
 
       - name: Build with Vite

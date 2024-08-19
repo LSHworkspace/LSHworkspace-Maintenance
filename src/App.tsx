@@ -111,7 +111,7 @@ function App() {
                     }}
                 >
                     <text className="drop-shadow-lg shadow-white">
-                        Contact: contact@lshworkspace.com<br/>ⓒ 2022 LSHworkspace. All rights reserved. 짜빠게티
+                        Contact: contact@lshworkspace.com<br/>ⓒ 2022 LSHworkspace. All rights reserved.
                     </text>
                 </motion.div>
             </div>

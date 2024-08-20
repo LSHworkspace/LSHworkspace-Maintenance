@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 
 function App() {
     return (
-        <div className="App">
+        <div className="relative w-full h-full">
             <motion.div
                 className="absolute w-full h-full bg-black"
             >
@@ -100,7 +100,7 @@ function App() {
                     </motion.div>
                 </motion.div>
                 <motion.div
-                    className="absolute w-full bottom-0 py-3 text-center text-white text-xs md:text-base"
+                    className="absolute w-full bottom-20 py-3 text-center text-zinc-200 text-xs md:text-base"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1}}
                     transition={{
@@ -111,7 +111,7 @@ function App() {
                     }}
                 >
                     <text className="drop-shadow-lg shadow-white">
-                        Contact: contact@lshworkspace.com<br/>ⓒ 2022 LSHworkspace. All rights reserved.
+                        Official Contact: contact@lshworkspace.com<br/>ⓒ 2022 LSHworkspace. All rights reserved.
                     </text>
                 </motion.div>
             </div>

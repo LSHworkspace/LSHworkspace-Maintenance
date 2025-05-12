@@ -4,6 +4,12 @@ on:
   push:
     branches: [ main ]
 
+  workflow_run:
+    workflows:
+      - ""
+
+  workflow_dispatch:
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
@@ -30,5 +36,5 @@ jobs:
         username: ${{ secrets.SSH_USERNAME }}
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         source: "dist/*"
-        target: "${{ secrets.SSH_PATH }}"
+        target: ${{ secrets.SSH_PATH }}
         strip_components: 0

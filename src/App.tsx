@@ -1,10 +1,9 @@
-import './App.css';
-// import './reset.css';
+import React from 'react';
 import { motion } from "framer-motion";
 
 // import { Comets } from "./Comets";
 
-function App() {
+const Index: React.FC = () => {
     return (
         <div className="relative w-full h-full">
             <motion.div
@@ -119,4 +118,4 @@ function App() {
     );
 }
 
-export default App;
+export default Index;

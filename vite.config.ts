@@ -1,14 +1,16 @@
 import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import dotenv from 'dotenv'
+import tailwindcss from '@tailwindcss/vite'
+import react from '@vitejs/plugin-react-swc'
 
-// .env Load
-dotenv.config()
-
-console.log('Base URL:', process.env.VITE_BASE_URL)
-
-// https://vitejs.dev/config/
+// https://vite.dev/config/
 export default defineConfig({
-  base: process.env.VITE_BASE_URL,
-  plugins: [react()],
+  base: '/',
+  plugins: [
+    react(),
+    tailwindcss(),
+  ],
+  build: {
+    outDir: 'dist',
+    ssrManifest: true,
+  }
 })

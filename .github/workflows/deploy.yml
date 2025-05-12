@@ -1,40 +1,65 @@
-name: Deploy to GitHub Pages
+name: Deploy with Zero Downtime
 
 on:
   push:
     branches: [ main ]
-
-  workflow_run:
-    workflows:
-      - ""
-
   workflow_dispatch:
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    
+
     steps:
-    - uses: actions/checkout@v4
-    
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
         node-version: '20'
         cache: 'npm'
-    
+
     - name: Install dependencies
       run: npm ci
-    
-    - name: Build
+
+    - name: Build project
       run: npm run build
-    
-    - name: Deploy to server
+
+    - name: Compress dist folder
+      run: tar -czf dist.tar.gz -C dist .
+
+    - name: Upload archive to server
       uses: appleboy/scp-action@v0.1.7
       with:
         host: ${{ secrets.SSH_HOST }}
         username: ${{ secrets.SSH_USERNAME }}
         key: ${{ secrets.SSH_PRIVATE_KEY }}
-        source: "dist/*"
-        target: ${{ secrets.SSH_PATH }}
+        source: "dist.tar.gz"
+        target: "/tmp"
         strip_components: 0
+
+    - name: Deploy to timestamped release dir and symlink
+      uses: appleboy/ssh-action@v0.1.10
+      with:
+        host: ${{ secrets.SSH_HOST }}
+        username: ${{ secrets.SSH_USERNAME }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        script: |
+          set -e
+
+          # define paths
+          BASE_DIR="/srv/lshworkspace/nginx/share/maintenance"
+          RELEASES_DIR="$BASE_DIR/releases"
+          TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+          NEW_RELEASE="$RELEASES_DIR/$TIMESTAMP"
+
+          # create directory and unpack
+          mkdir -p "$NEW_RELEASE"
+          tar -xzf /tmp/dist.tar.gz -C "$NEW_RELEASE"
+          rm /tmp/dist.tar.gz
+
+          # update symlink atomically
+          ln -sfn "$NEW_RELEASE" "$BASE_DIR/current"
+
+          echo "✅ Deployed to $NEW_RELEASE"
+          echo "ℹ️ Symlink updated to point to: $BASE_DIR/current"

@@ -13,73 +13,66 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+    - name: Checkout repository
+      uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
 
-      - name: Install dependencies
-        run: npm ci
+    - name: Install dependencies
+      run: npm ci
 
-      - name: Build project
-        run: npm run build
+    - name: Build project
+      run: npm run build
 
-      - name: Prepare files for server deployment
-        run: |
-          # maintenance 페이지를 index.html 복사본으로 만들고 아카이브 생성
-          cp dist/index.html dist/maintenance.html
-          tar -czf dist.tar.gz -C dist .
+    - name: Prepare files for server deployment
+      run: |
+        cp dist/index.html dist/maintenance.html
+        tar -czf dist.tar.gz -C dist .
 
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./dist
-          publish_branch: gh-pages
-          commit_message: "🔄 Deploy to GitHub Pages"
+    - name: Deploy to GitHub Pages
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./dist
+        publish_branch: gh-pages
+        commit_message: "Deploy to GitHub Pages"
 
-      - name: Upload archive to server
-        uses: appleboy/scp-action@v0.1.10
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USERNAME }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "dist.tar.gz"
-          target: "/tmp/dist.tar.gz"
-          # strip_components: 0 옵션은 필요시에 상위 디렉터리 레벨 유지를 위해 사용
+    - name: Upload archive to server
+      uses: appleboy/scp-action@v0.1.7
+      with:
+        host: ${{ secrets.SSH_HOST }}
+        username: ${{ secrets.SSH_USERNAME }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        source: "dist.tar.gz"
+        target: "/tmp"
+        strip_components: 0
 
-      - name: Deploy to server
-        uses: appleboy/ssh-action@v0.1.10
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USERNAME }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            set -euo pipefail
+    - name: Deploy to server
+      uses: appleboy/ssh-action@v0.1.10
+      with:
+        host: ${{ secrets.SSH_HOST }}
+        username: ${{ secrets.SSH_USERNAME }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        script: |
+          set -e
 
-            # 혹시 /tmp/dist.tar.gz 가 디렉터리로 남아 있으면 제거
-            rm -rf /tmp/dist.tar.gz
+          # define paths
+          BASE_DIR="/srv/lshworkspace/nginx/share/maintenance"
+          RELEASES_DIR="$BASE_DIR/releases"
+          TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+          NEW_RELEASE="$RELEASES_DIR/$TIMESTAMP"
 
-            # 1) maintenance 디렉터리로 이동 (절대경로는 이 한 번만)
-            cd /srv/lshworkspace/nginx/share/maintenance
+          # create directory and unpack
+          mkdir -p "$NEW_RELEASE"
+          tar -xzf /tmp/dist.tar.gz -C "$NEW_RELEASE"
+          rm /tmp/dist.tar.gz
 
-            # 2) 상대경로 변수 선언
-            RELEASES_DIR="releases"
-            TIMESTAMP=$(date +%Y%m%d-%H%M%S)
-            NEW_RELEASE="$RELEASES_DIR/$TIMESTAMP"
+          # update symlink atomically
+          ln -sfn "$NEW_RELEASE" "$BASE_DIR/current"
 
-            # 3) 새 릴리즈 디렉터리 생성 및 압축 해제
-            mkdir -p "$NEW_RELEASE"
-            tar -xzf /tmp/dist.tar.gz -C "$NEW_RELEASE"
-            rm -f /tmp/dist.tar.gz
-
-            # 4) current 심볼릭 링크를 상대경로로 원자적 업데이트
-            ln -sfn "$NEW_RELEASE" current
-
-            # 5) 완료 로그
-            echo "✅ New release created at: $NEW_RELEASE"
-            echo "ℹ️ 'current' → $NEW_RELEASE"
+          echo "✅ Deployed to $NEW_RELEASE"
+          echo "ℹ️ Symlink updated to point to: $BASE_DIR/current"

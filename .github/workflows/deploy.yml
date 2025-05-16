@@ -43,15 +43,14 @@ jobs:
           commit_message: "🔄 Deploy to GitHub Pages"
 
       - name: Upload archive to server
-        uses: appleboy/scp-action@v0.1.7
+        uses: appleboy/scp-action@v0.1.10
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           source: "dist.tar.gz"
           target: "/tmp/dist.tar.gz"
-          # strip_components: 0 옵션은 tar 추출 시 상위 디렉터리 레벨 유지
-          strip_components: 0
+          # strip_components: 0 옵션은 필요시에 상위 디렉터리 레벨 유지를 위해 사용
 
       - name: Deploy to server
         uses: appleboy/ssh-action@v0.1.10
@@ -61,6 +60,9 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             set -euo pipefail
+
+            # 혹시 /tmp/dist.tar.gz 가 디렉터리로 남아 있으면 제거
+            rm -rf /tmp/dist.tar.gz
 
             # 1) maintenance 디렉터리로 이동 (절대경로는 이 한 번만)
             cd /srv/lshworkspace/nginx/share/maintenance
@@ -76,9 +78,8 @@ jobs:
             rm -f /tmp/dist.tar.gz
 
             # 4) current 심볼릭 링크를 상대경로로 원자적 업데이트
-            #    (maintenance/current → maintenance/releases/<timestamp>)
             ln -sfn "$NEW_RELEASE" current
 
-            # 5) 로그 출력
+            # 5) 완료 로그
             echo "✅ New release created at: $NEW_RELEASE"
             echo "ℹ️ 'current' → $NEW_RELEASE"

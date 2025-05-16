@@ -35,7 +35,7 @@ const Index: React.FC = () => {
                             cy="0"
                             rx="150"
                             ry="2"
-                        ></ellipse>
+                        ></ellipse> 
                     </g>
                     <g transform="rotate(300)">
                         <ellipse

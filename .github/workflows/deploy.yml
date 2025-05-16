@@ -60,21 +60,25 @@ jobs:
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            set -e
+            set -euo pipefail
 
-            # 배포 디렉터리 정의
-            BASE_DIR="/srv/lshworkspace/nginx/share/maintenance"
-            RELEASES_DIR="$BASE_DIR/releases"
+            # 1) maintenance 디렉터리로 이동 (절대경로는 이 한 번만)
+            cd /srv/lshworkspace/nginx/share/maintenance
+
+            # 2) 상대경로 변수 선언
+            RELEASES_DIR="releases"
             TIMESTAMP=$(date +%Y%m%d-%H%M%S)
             NEW_RELEASE="$RELEASES_DIR/$TIMESTAMP"
 
-            # 새 릴리즈 디렉터리 생성 및 압축 해제
+            # 3) 새 릴리즈 디렉터리 생성 및 압축 해제
             mkdir -p "$NEW_RELEASE"
             tar -xzf /tmp/dist.tar.gz -C "$NEW_RELEASE"
-            rm /tmp/dist.tar.gz
+            rm -f /tmp/dist.tar.gz
 
-            # 심볼릭 링크를 원자적으로 업데이트
-            ln -sfn "$NEW_RELEASE" "$BASE_DIR/current"
+            # 4) current 심볼릭 링크를 상대경로로 원자적 업데이트
+            #    (maintenance/current → maintenance/releases/<timestamp>)
+            ln -sfn "$NEW_RELEASE" current
 
-            echo "✅ Deployed to $NEW_RELEASE"
-            echo "ℹ️ Symlink updated to: $BASE_DIR/current"
+            # 5) 로그 출력
+            echo "✅ New release created at: $NEW_RELEASE"
+            echo "ℹ️ 'current' → $NEW_RELEASE"

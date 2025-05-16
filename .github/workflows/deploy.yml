@@ -43,14 +43,13 @@ jobs:
           commit_message: "🔄 Deploy to GitHub Pages"
 
       - name: Upload archive to server
-        uses: appleboy/scp-action@v0.1.10
+        uses: appleboy/scp-action@v1
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           source: "dist.tar.gz"
           target: "/tmp/dist.tar.gz"
-          # strip_components: 0 옵션은 필요시에 상위 디렉터리 레벨 유지를 위해 사용
 
       - name: Deploy to server
         uses: appleboy/ssh-action@v0.1.10

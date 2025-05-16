@@ -30,7 +30,6 @@ jobs:
 
       - name: Prepare files for server deployment
         run: |
-          # maintenance 페이지를 index.html 복사본으로 만들고 아카이브 생성
           cp dist/index.html dist/maintenance.html
           tar -czf dist.tar.gz -C dist .
 
@@ -49,7 +48,7 @@ jobs:
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           source: "dist.tar.gz"
-          target: "/tmp/dist.tar.gz"
+          target: "/tmp"        # ← 여기만 디렉터리로 지정
 
       - name: Deploy to server
         uses: appleboy/ssh-action@v0.1.10
@@ -60,25 +59,22 @@ jobs:
           script: |
             set -euo pipefail
 
-            # 혹시 /tmp/dist.tar.gz 가 디렉터리로 남아 있으면 제거
-            rm -rf /tmp/dist.tar.gz
-
-            # 1) maintenance 디렉터리로 이동 (절대경로는 이 한 번만)
+            # 절대경로 한 번만 사용
             cd /srv/lshworkspace/nginx/share/maintenance
 
-            # 2) 상대경로 변수 선언
+            # 상대경로로 릴리즈 생성
             RELEASES_DIR="releases"
             TIMESTAMP=$(date +%Y%m%d-%H%M%S)
             NEW_RELEASE="$RELEASES_DIR/$TIMESTAMP"
 
-            # 3) 새 릴리즈 디렉터리 생성 및 압축 해제
             mkdir -p "$NEW_RELEASE"
             tar -xzf /tmp/dist.tar.gz -C "$NEW_RELEASE"
-            rm -f /tmp/dist.tar.gz
 
-            # 4) current 심볼릭 링크를 상대경로로 원자적 업데이트
+            # 원자적 심볼릭 링크 갱신
             ln -sfn "$NEW_RELEASE" current
 
-            # 5) 완료 로그
+            # 업로드된 아카이브 정리
+            rm -f /tmp/dist.tar.gz
+
             echo "✅ New release created at: $NEW_RELEASE"
             echo "ℹ️ 'current' → $NEW_RELEASE"
